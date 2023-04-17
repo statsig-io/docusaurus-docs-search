@@ -13,7 +13,7 @@ import { translate } from "@docusaurus/Translate";
 import { usePluralForm } from "@docusaurus/theme-common";
 import { useLocation } from "@docusaurus/router";
 import ExecutionEnvironment from "@docusaurus/ExecutionEnvironment";
-import { fetchEventSource } from "@microsoft/fetch-event-source";
+import axios from "axios";
 import { ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -390,7 +390,6 @@ type Message = {
   type: "apiMessage" | "userMessage";
   message: string;
   isStreaming?: boolean;
-  sourceDocs?: any[];
 };
 
 const LoadingDots = ({
@@ -412,33 +411,22 @@ const LoadingDots = ({
 function ChatPageContent(): React.ReactElement {
   const [query, setQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [sourceDocs, setSourceDocs] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [messageState, setMessageState] = useState<{
     messages: Message[];
-    pending?: string;
-    history: [string, string][];
-    pendingSourceDocs?: any[];
   }>({
     messages: [],
-    history: [],
-    pendingSourceDocs: [],
   });
 
-  const { messages, pending, history, pendingSourceDocs } = messageState;
-
-  const messageListRef = useRef<HTMLDivElement>(null);
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    textAreaRef.current?.focus();
-  }, []);
+  const { messages } = messageState;
 
   //handle form submission
   async function handleSubmit(e: any) {
     e.preventDefault();
 
     setError(null);
+
+    console.log(`query is: ${query}`);
 
     if (!query) {
       alert("Please input a question");
@@ -456,59 +444,47 @@ function ChatPageContent(): React.ReactElement {
           message: question,
         },
       ],
-      pending: undefined,
     }));
 
     setLoading(true);
     setQuery("");
-    setMessageState((state) => ({ ...state, pending: "" }));
 
     const ctrl = new AbortController();
 
     try {
-      fetchEventSource("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await axios.post(
+        "https://otherwill.com/api/chat/completions",
+        {
+          input: question,
+          model: "statsig_v0.2.9",
+          // model_version_id: modelVersionID,
+          // thread_id: threadID,
         },
-        body: JSON.stringify({
-          question,
-          history,
-        }),
-        signal: ctrl.signal,
-        onmessage: (event) => {
-          if (event.data === "[DONE]") {
-            setMessageState((state) => ({
-              history: [...state.history, [question, state.pending ?? ""]],
-              messages: [
-                ...state.messages,
-                {
-                  type: "apiMessage",
-                  message: state.pending ?? "",
-                  sourceDocs: state.pendingSourceDocs,
-                },
-              ],
-              pending: undefined,
-              pendingSourceDocs: undefined,
-            }));
-            setLoading(false);
-            ctrl.abort();
-          } else {
-            const data = JSON.parse(event.data);
-            if (data.sourceDocs) {
-              setMessageState((state) => ({
-                ...state,
-                pendingSourceDocs: data.sourceDocs,
-              }));
-            } else {
-              setMessageState((state) => ({
-                ...state,
-                pending: (state.pending ?? "") + data.data,
-              }));
-            }
-          }
-        },
-      });
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: 120000,
+        }
+      );
+      if (res.data.error) {
+        throw new Error(res.data.error);
+      }
+
+      console.log(res.data.completion);
+
+      setMessageState((state) => ({
+        messages: [
+          ...state.messages,
+          {
+            type: "apiMessage",
+            message: res.data.completion ?? "",
+          },
+        ],
+      }));
+
+      setLoading(false);
+      ctrl.abort();
     } catch (error) {
       setLoading(false);
       setError("An error occurred while fetching the data. Please try again.");
@@ -516,39 +492,10 @@ function ChatPageContent(): React.ReactElement {
     }
   }
 
-  //prevent empty submissions
-  const handleEnter = useCallback(
-    (e: any) => {
-      if (e.key === "Enter" && query) {
-        handleSubmit(e);
-      } else if (e.key == "Enter") {
-        e.preventDefault();
-      }
-    },
-    [query]
-  );
-
   const chatMessages = useMemo(() => {
-    return [
-      ...messages,
-      ...(pending
-        ? [
-            {
-              type: "apiMessage",
-              message: pending,
-              sourceDocs: pendingSourceDocs,
-            },
-          ]
-        : []),
-    ];
-  }, [messages, pending, pendingSourceDocs]);
+    return [...messages];
+  }, [messages]);
 
-  //scroll to bottom of chat
-  useEffect(() => {
-    if (messageListRef.current) {
-      messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
-    }
-  }, [chatMessages]);
   const { searchValue } = useSearchQuery();
 
   const pageTitle = "Chat with Statbot";
@@ -564,7 +511,7 @@ function ChatPageContent(): React.ReactElement {
         <h1>{pageTitle}</h1>
         <main className={styles.main}>
           <div className={styles.cloud}>
-            <div ref={messageListRef} className={styles.messagelist}>
+            <div className={styles.messagelist}>
               {chatMessages.map((message, index) => {
                 let icon;
                 let className;
@@ -605,56 +552,9 @@ function ChatPageContent(): React.ReactElement {
                         </ReactMarkdown>
                       </div>
                     </div>
-                    {message.sourceDocs && (
-                      <div className="p-5">
-                        <Accordion
-                          type="single"
-                          collapsible
-                          className="flex-col"
-                        >
-                          {message.sourceDocs.map((doc, index) => (
-                            <div key={`messageSourceDocs-${index}`}>
-                              <AccordionItem value={`item-${index}`}>
-                                <AccordionTrigger>
-                                  <h3>Source {index + 1}</h3>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                  <ReactMarkdown linkTarget="_blank">
-                                    {doc.pageContent}
-                                  </ReactMarkdown>
-                                  <p className="mt-2">
-                                    <b>Source:</b> {doc.metadata.source}
-                                  </p>
-                                </AccordionContent>
-                              </AccordionItem>
-                            </div>
-                          ))}
-                        </Accordion>
-                      </div>
-                    )}
                   </>
                 );
               })}
-              {sourceDocs.length > 0 && (
-                <div className="p-5">
-                  <Accordion type="single" collapsible className="flex-col">
-                    {sourceDocs.map((doc, index) => (
-                      <div key={`sourceDocs-${index}`}>
-                        <AccordionItem value={`item-${index}`}>
-                          <AccordionTrigger>
-                            <h3>Source {index + 1}</h3>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <ReactMarkdown linkTarget="_blank">
-                              {doc.pageContent}
-                            </ReactMarkdown>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </div>
-                    ))}
-                  </Accordion>
-                </div>
-              )}
             </div>
           </div>
           <div className={styles.center}>
@@ -662,8 +562,13 @@ function ChatPageContent(): React.ReactElement {
               <form onSubmit={handleSubmit}>
                 <textarea
                   disabled={loading}
-                  onKeyDown={handleEnter}
-                  ref={textAreaRef}
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter" && query) {
+                      handleSubmit(e);
+                    } else if (e.key == "Enter") {
+                      e.preventDefault();
+                    }
+                  }}
                   autoFocus={false}
                   rows={1}
                   maxLength={3000}
