@@ -39,9 +39,7 @@
     "typescript": "^4.7.4"
   },
   "workspaces": [
-    "docusaurus-search-local",
-    "website",
-    "website-multi-docs"
+    "docusaurus-search-local"
   ],
   "packageManager": "yarn@3.2.4",
   "resolutions": {
