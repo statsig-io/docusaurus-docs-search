@@ -1,6 +1,6 @@
 {
   "name": "statsig-docusaurus-search",
-  "version": "0.0.2-beta.13",
+  "version": "0.0.2-beta.18",
   "description": "An offline/local search plugin for Docusaurus v2",
   "repository": "https://github.com/easyops-cn/docusaurus-search-local",
   "homepage": "https://github.com/easyops-cn/docusaurus-search-local",

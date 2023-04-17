@@ -400,7 +400,9 @@ const LoadingDots = ({
 };
 
 function ChatPageContent(): React.ReactElement {
-  const [query, setQuery] = useState<string>("");
+  const { searchValue } = useSearchQuery();
+  const [threadId, setThreadId] = useState<string>("");
+  const [query, setQuery] = useState<string>(searchValue);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [messageState, setMessageState] = useState<{
@@ -416,8 +418,6 @@ function ChatPageContent(): React.ReactElement {
     e.preventDefault();
 
     setError(null);
-
-    console.log(`query is: ${query}`);
 
     if (!query) {
       alert("Please input a question");
@@ -444,12 +444,12 @@ function ChatPageContent(): React.ReactElement {
 
     try {
       const res = await axios.post(
-        "https://otherwill.com/api/chat/completions",
+        "https://api.otherwill.com/v2@beta/chat/completions",
         {
           input: question,
           model: "statsig_v0.2.9",
-          // model_version_id: modelVersionID,
-          // thread_id: threadID,
+          model_version_id: "clg9zdawj0001kw08x6q8wken",
+          ...(threadId.length > 0 && { thread_id: threadId }),
         },
         {
           headers: {
@@ -462,7 +462,7 @@ function ChatPageContent(): React.ReactElement {
         throw new Error(res.data.error);
       }
 
-      console.log(res.data.completion);
+      setThreadId(res.data.thread_id ?? "");
 
       setMessageState((state) => ({
         messages: [
@@ -486,8 +486,6 @@ function ChatPageContent(): React.ReactElement {
   const chatMessages = useMemo(() => {
     return [...messages];
   }, [messages]);
-
-  const { searchValue } = useSearchQuery();
 
   const pageTitle = "Chat with Statbot";
 
