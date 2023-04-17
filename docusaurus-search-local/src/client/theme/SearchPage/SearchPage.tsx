@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useRef,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import Head from "@docusaurus/Head";
@@ -36,9 +30,6 @@ import {
 } from "../../utils/proxiedGenerated";
 
 import styles from "./SearchPage.module.css";
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const ReactMarkdown = require("react-markdown");
 
 const CHAT_PARAM_QUERY = "chat";
 
@@ -518,7 +509,7 @@ function ChatPageContent(): React.ReactElement {
                 if (message.type === "apiMessage") {
                   icon = (
                     <img
-                      src="/statsiglogo.png"
+                      src="/img/statsiglogo.png"
                       alt="AI"
                       width="40"
                       height="40"
@@ -529,7 +520,7 @@ function ChatPageContent(): React.ReactElement {
                 } else {
                   icon = (
                     <img
-                      src="/usericon.png"
+                      src="/img/usericon.png"
                       alt="Me"
                       width="30"
                       height="30"
@@ -547,9 +538,7 @@ function ChatPageContent(): React.ReactElement {
                     <div key={`chatMessage-${index}`} className={className}>
                       {icon}
                       <div className={styles.markdownanswer}>
-                        <ReactMarkdown linkTarget="_blank">
-                          {message.message}
-                        </ReactMarkdown>
+                        {message.message}
                       </div>
                     </div>
                   </>
