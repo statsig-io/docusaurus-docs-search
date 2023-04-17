@@ -162,7 +162,8 @@ html[data-theme="dark"] .noResultsIcon {
 }
 
 .hitFooter {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
   margin-top: var(--search-local-spacing, 12px);
   font-size: 0.85em;
 }

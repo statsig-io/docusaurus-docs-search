@@ -212,6 +212,45 @@ export default function SearchBar({
       return a;
     };
 
+    const chatFooterLinkElement = ({
+      query,
+      isEmpty,
+    }: {
+      query: string;
+      isEmpty: boolean;
+    }): HTMLAnchorElement => {
+      const a = document.createElement("a");
+      const params = new URLSearchParams();
+
+      params.set("q", query);
+
+      const linkText = "Try asking Statbot";
+
+      if (Array.isArray(searchContextByPaths) && !isEmpty) {
+        params.set("ctx", searchContext);
+      }
+
+      if (versionUrl !== baseUrl) {
+        if (!versionUrl.startsWith(baseUrl)) {
+          throw new Error(
+            `Version url '${versionUrl}' does not start with base url '${baseUrl}', this is a bug of \`@easyops-cn/docusaurus-search-local\`, please report it.`
+          );
+        }
+        params.set("version", versionUrl.substring(baseUrl.length));
+      }
+      const url = `${baseUrl}search?${params.toString()}&chat=true`;
+      a.href = url;
+      a.textContent = linkText;
+      a.addEventListener("click", (e) => {
+        if (!e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+          search.current?.autocomplete.close();
+          history.push(url);
+        }
+      });
+      return a;
+    };
+
     search.current = autoComplete(
       searchBarRef.current,
       {
@@ -244,13 +283,12 @@ export default function SearchBar({
             suggestion: SuggestionTemplate,
             empty: EmptyTemplate,
             footer: ({ query, isEmpty }: any) => {
-              if (isEmpty && !searchContext) {
-                return;
-              }
-              const a = searchFooterLinkElement({ query, isEmpty });
               const div = document.createElement("div");
               div.className = styles.hitFooter;
-              div.appendChild(a);
+              if (!isEmpty) {
+                div.appendChild(searchFooterLinkElement({ query, isEmpty }));
+              }
+              div.appendChild(chatFooterLinkElement({ query, isEmpty }));
               return div;
             },
           },
