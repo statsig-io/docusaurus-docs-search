@@ -3173,6 +3173,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/marked@npm:^4.0.8":
+  version: 4.0.8
+  resolution: "@types/marked@npm:4.0.8"
+  checksum: 68278fa7acaa5d920cdc239d675b5daf842e0ad4779e4848cd617d9baf2ac1afccb5a264c331e37d80031d647e1640cb983cd31e73d45b28552670b4853fad8e
+  languageName: node
+  linkType: hard
+
 "@types/mdast@npm:^3.0.0":
   version: 3.0.11
   resolution: "@types/mdast@npm:3.0.11"
@@ -9285,6 +9292,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"marked@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "marked@npm:4.3.0"
+  bin:
+    marked: bin/marked.js
+  checksum: 0db6817893952c3ec710eb9ceafb8468bf5ae38cb0f92b7b083baa13d70b19774674be04db5b817681fa7c5c6a088f61300815e4dd75a59696f4716ad69f6260
+  languageName: node
+  linkType: hard
+
 "mdast-squeeze-paragraphs@npm:^4.0.0":
   version: 4.0.0
   resolution: "mdast-squeeze-paragraphs@npm:4.0.0"
@@ -12204,6 +12220,7 @@ __metadata:
     "@types/jest": ^28.0.0
     "@types/klaw-sync": ^6.0.0
     "@types/lunr": ^2.3.3
+    "@types/marked": ^4.0.8
     "@types/node": ^18.0.0
     "@types/react": ^18.0.0
     "@types/react-helmet": ^6.1.0
@@ -12219,6 +12236,7 @@ __metadata:
     lunr: ^2.3.9
     lunr-languages: ^1.4.0
     mark.js: ^8.11.1
+    marked: ^4.3.0
     rimraf: ^3.0.2
     tslib: ^2.4.0
     typescript: ^4.7.4

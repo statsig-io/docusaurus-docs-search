@@ -9,6 +9,7 @@ import { useLocation } from "@docusaurus/router";
 import ExecutionEnvironment from "@docusaurus/ExecutionEnvironment";
 import axios from "axios";
 import clsx from "clsx";
+import { marked } from "marked";
 
 import useSearchQuery from "../hooks/useSearchQuery";
 import { fetchIndexes } from "../SearchBar/fetchIndexes";
@@ -346,7 +347,7 @@ function ChatPageContent(): React.ReactElement {
     messages: [
       {
         message:
-          "Hi there, I'm Statbot, what would you like to learn about Statsig? Please note that I am an experimental feature and may not be able to answer all of your questions yet. Please verify my output before executing",
+          "Hi there, I'm Statbot, what would you like to learn about Statsig? Please note that I am an experimental feature and may not be able to answer all of your questions yet. Please verify my output before executing.",
         type: "apiMessage",
       },
     ],
@@ -472,12 +473,13 @@ function ChatPageContent(): React.ReactElement {
                       ? styles.usermessagewaiting
                       : styles.usermessage;
                 }
+                const html = marked.parse(message.message);
                 return (
                   <>
                     <div key={`chatMessage-${index}`} className={className}>
                       {icon}
                       <div className={styles.markdownanswer}>
-                        {message.message}
+                        <div dangerouslySetInnerHTML={{ __html: html }} />
                       </div>
                     </div>
                   </>
