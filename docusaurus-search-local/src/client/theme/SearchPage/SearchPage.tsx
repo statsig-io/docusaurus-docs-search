@@ -26,6 +26,8 @@ import {
   useAllContextsWithNoSearchContext,
 } from "../../utils/proxiedGenerated";
 
+import { Statsig, StatsigProvider, useLayer } from "statsig-react";
+
 import styles from "./SearchPage.module.css";
 
 const CHAT_PARAM_QUERY = "chat";
@@ -39,9 +41,15 @@ export default function SearchPage(): React.ReactElement {
 
   if (chatValue && chatValue.length > 0) {
     return (
-      <Layout>
-        <ChatPageContent />
-      </Layout>
+      <StatsigProvider
+        sdkKey="client-oJY6hTJeduhEN2bf6fh6unHvxIk9UsjS99BlO4owh0r"
+        waitForInitialization={true}
+        user={{}}
+      >
+        <Layout>
+          <ChatPageContent />
+        </Layout>
+      </StatsigProvider>
     );
   }
 
@@ -353,10 +361,14 @@ function ChatPageContent(): React.ReactElement {
     ],
   });
 
+  const { layer: statbot_layer } = useLayer("statbot_layer");
+
   const { messages } = messageState;
 
   //handle form submission
   async function handleSubmit(e: any) {
+    Statsig.logEvent("statbot_user_message", 1);
+
     e.preventDefault();
 
     setError(null);
@@ -389,8 +401,11 @@ function ChatPageContent(): React.ReactElement {
         "https://api.otherwill.com/v2@beta/chat/completions",
         {
           input: question,
-          model: "statsig_v0.2.9",
-          model_version_id: "clg9zdawj0001kw08x6q8wken",
+          model: statbot_layer.get("otherwill_model", "statsig_v0.2.9"),
+          model_version_id: statbot_layer.get(
+            "otherwill_model_version",
+            "clg9zdawj0001kw08x6q8wken"
+          ),
           ...(threadId.length > 0 && { thread_id: threadId }),
         },
         {
@@ -415,6 +430,9 @@ function ChatPageContent(): React.ReactElement {
           },
         ],
       }));
+
+      Statsig.logEvent("statbot_latency_ms", res.data.latency_ms);
+      Statsig.logEvent("statbot_tokens_used", res.data.usage.total_tokens);
 
       setLoading(false);
       ctrl.abort();
