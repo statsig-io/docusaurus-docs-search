@@ -400,14 +400,10 @@ function ChatPageContent(): React.ReactElement {
 
     try {
       const res = await axios.post(
-        "https://api.otherwill.com/v2@beta/chat/completions",
+        "https://api.scoutos.com/v1/chat/completions",
         {
           input: question,
-          model: statbot_layer.get("otherwill_model", "statsig_v0.2.9"),
-          model_version_id: statbot_layer.get(
-            "otherwill_model_version",
-            "clg9zdawj0001kw08x6q8wken"
-          ),
+          id: statbot_layer.get("scout_model_id", "clogdr6q20000ju0fc8j8aqlc"),
           ...(threadId.length > 0 && { thread_id: threadId }),
         },
         {
